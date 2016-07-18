@@ -9,7 +9,6 @@ def get_url(result):
 	for title in result.find_all('h3', class_="r"):
 		for link in title.find_all('a'):
 			url = link.get('href')
-	
 	return url
 
 def get_title(result):
@@ -26,7 +25,8 @@ def get_description(result):
 	#description = description.encode("utf-8")
 	return description
 
-prod_list_file = '/Users/ascodel/Google Drive/prod_list.csv'
+prod_list_file = '/Users/ascodel/Google Drive/Google Product Scrape/prod_list.csv'
+
 
 with open(prod_list_file, 'rb') as f:
 	reader = csv.reader(f)
@@ -49,21 +49,34 @@ for product in prod_cats:
 			product_search.append(word)
 
 	term = ''.join(product_search)
-	#term_1 = term + "federal+requirement"
-	#terms.append(term_1)
+	term_1 = term + "federal+requirement"
+	terms.append(term_1)
 	#term_2 = term + "federal+purchasing"
 	#terms.append(term_2)
-	term_3 = term +"FEMP"
-	terms.append(term_3)
+	#term_3 = term +"FEMP"
+	#terms.append(term_3)
 
-output_file = '/Users/ascodel/Google Drive/search_results.csv'
+output_file = '/Users/ascodel/Google Drive/SFO Group Files/FEMP EEPP/google_search_results_' + str(date) + '.csv'
 dictionary = {'term': '', 'url': '', 'title': '', 'description':'','date': ''}
+'''
+term = 'femp'
+r = requests.get("https://www.google.com/search?q=" + term)
+soup = BeautifulSoup(r.text)
+for result in soup.find_all('div',class_='g'):
+	print result
+'''
 
 for term in terms:
 	r = requests.get("https://www.google.com/search?q=" + term)
 	soup = BeautifulSoup(r.text)
+		
+	#print term
+	#url = "http://www.google.com/" + term
+	#print url
 
-	for result in soup.find_all('li', class_="g"):
+
+
+	for result in soup.find_all('div', class_='g'):
 		dictionary['date'] = date
 		dictionary['term'] = term
 		dictionary['url'] = get_url(result)
@@ -82,54 +95,17 @@ for term in terms:
 			#writer.writerow(dictionary.values())
 '''
 
-class UTF8Recoder:
-    """
-    Iterator that reads an encoded stream and reencodes the input to UTF-8
-    """
-    def __init__(self, f, encoding):
-        self.reader = codecs.getreader(encoding)(f)
+	for result in soup.find_all('li', class_="_g"):
+		dictionary['date'] = date
+		dictionary['term'] = term
+		dictionary['url'] = get_url(result)
+		dictionary['title'] = get_title(result)
+		dictionary['description'] = get_description(result)
 
-    def __iter__(self):
-        return self
+		with open(output_file, 'a') as csvfile:
+			writer = csv.writer(csvfile)
+			writer.writerow(dictionary.values())
 
-    def next(self):
-        return self.reader.next().encode("utf-8")
-
-
-class UnicodeWriter:
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
-
-
-#for term in terms:
-	#print term
-#	url = "http://www.google.com/" + term
-#	print url
 
 #print terms
 	#product_words = str(product)
